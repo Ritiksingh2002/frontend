@@ -2,7 +2,7 @@ name: Node.js CI
 
 on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
     branches:
@@ -19,15 +19,17 @@ jobs:
     strategy:
       matrix:
         node-version:
+          - 14.x
+          - 16.x
+          - 18.x
           - 20.x
-        # Add other versions as needed
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -59,19 +61,17 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
+          push: true
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
             ${{ env.IMAGE_NAME }}:latest
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
-          cache-to: type=inline
-          load: true
 
       - name: Display environment variables
         run: echo "$GITHUB_ENV"
 
       - name: Bump version and push git tag
         id: version-bump-git-tag
-        uses: anothrNick/github-tag-action@9885a4f9af674ba472de91fb3c@cb@33ecb32b7e
+        uses: anothrilick/github-tag-action@9885a4f9af674ba472de91fb3c@cb@33ecb32b7e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: github.ref == 'refs/heads/main'
