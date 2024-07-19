@@ -45,4 +45,19 @@ jobs:
         uses: benjlevesque/short-sha@v1.2
         with:
           length: 7
-     
+      - name: Login to JFrog Docker Registry
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.JFROG_REGISTRY_USERNAME }}
+          password: ${{ secrets.JFROG_REGISTRY_PASSWORD }}
+          registry: ${{ env.DOCKER_REGISTRY }}
+      
+      - name: Docker Build and Push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
+            ${{ env.IMAGE_NAME }}:latest
