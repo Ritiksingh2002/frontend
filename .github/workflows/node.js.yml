@@ -1,31 +1,83 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
 name: Node.js CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: 
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+
+env:
+  DOCKER_REGISTRY: "my-ui-docker.jfrog.io"
+  IMAGE_NAME: "my-ui-docker.jfrog.io/ui-poc"
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [20.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version:
+          - 20.x
+        # Add other versions as needed
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build --if-present
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Generate short SHA
+        id: short-sha
+        uses: benjlevesque/short-sha@v1.2
+        with:
+          length: 7
+
+      - name: Login to JFrog Docker Registry
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.JFROG_REGISTRY_USERNAME }}
+          password: ${{ secrets.JFROG_REGISTRY_PASSWORD }}
+          registry: ${{ env.DOCKER_REGISTRY }}
+
+      - name: Docker Build and Push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
+          load: true
+
+      - name: Display environment variables
+        run: echo "$GITHUB_ENV"
+
+      - name: Bump version and push git tag
+        id: version-bump-git-tag
+        uses: anothrNick/github-tag-action@9885a4f9af674ba472de91fb3c@cb@33ecb32b7e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.ref == 'refs/heads/main'
+
+      - name: Docker Push
+        id: push-docker-image
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }} ${{ env.IMAGE_NAME }}:${{ steps.version-bump-git-tag.outputs.new_tag }}
+          docker push ${{ env.IMAGE_NAME }}:${{ steps.version-bump-git-tag.outputs.new_tag }}
