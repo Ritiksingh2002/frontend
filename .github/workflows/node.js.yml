@@ -9,8 +9,8 @@ on:
       - main
 
 env:
-  DOCKER_REGISTRY: "my-ui-docker-local.jfrog.io"
-  IMAGE_NAME: "my-ui-docker-local.jfrog.io/ui-poc"
+  DOCKER_REGISTRY: "https://rkss.jfrog.io/artifactory/my-ui-docker-local"
+  IMAGE_NAME: "https://rkss.jfrog.io/artifactory/my-ui-docker-local/ui-poc"
 
 jobs:
   build:
