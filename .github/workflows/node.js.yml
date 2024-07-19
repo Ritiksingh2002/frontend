@@ -37,4 +37,12 @@ jobs:
       - name: Build project
         run: npm run build --if-present
 
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v1
+     
+      - name: Generate short SHA
+        id: short-sha
+        uses: benjlevesque/short-sha@v1.2
+        with:
+          length: 7
      
