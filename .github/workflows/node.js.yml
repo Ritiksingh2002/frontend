@@ -9,8 +9,8 @@ on:
       - main
 
 env:
-  DOCKER_REGISTRY: "my-ui-docker.jfrog.io"
-  IMAGE_NAME: "my-ui-docker.jfrog.io/ui-poc"
+  DOCKER_REGISTRY: "my-ui-docker-local.jfrog.io"
+  IMAGE_NAME: "my-ui-docker-local.jfrog.io/ui-poc"
 
 jobs:
   build:
@@ -61,3 +61,6 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
             ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
+          load: true
