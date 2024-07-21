@@ -1,32 +1,35 @@
-# Stage 1: Build the Vue.js application
-FROM node:10 AS build-stage
+# Use a base Node.js image
+FROM node:14-alpine as build
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application code
+# Copy the rest of the application code to the working directory
 COPY . .
 
-# Build the Vue.js application
+# Build Vue.js application
 RUN npm run build
 
-# Stage 2: Serve the built files using Nginx
-FROM nginx:stable-alpine AS production-stage
+# Stage 2 - Serve the production build using a simple Node.js server
+FROM node:14-alpine
 
-# Copy the built files from the previous stage
-COPY --from=build-stage /app/dist /usr/share/nginx/html
+# Set working directory
+WORKDIR /app
 
-# Copy Nginx configuration file
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy built files from the build stage
+COPY --from=build /app/dist /app/dist
 
-# Expose port 80
+# Install serve globally (optional, if you want to use serve to serve the static files)
+RUN npm install -g serve
+
+# Expose port 80 (optional, depending on your deployment environment)
 EXPOSE 80
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Command to serve the built Vue.js application with serve
+CMD ["serve", "-s", "dist"]
