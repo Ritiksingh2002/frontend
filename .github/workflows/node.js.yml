@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]  # Choose a Node.js version that matches your project
+        node-version: [20.x]
 
     steps:
       - name: Checkout code
@@ -41,7 +41,7 @@ jobs:
         run: echo "::set-output name=sha::$(git rev-parse --short HEAD)"
 
       - name: Login to JFrog Docker Registry
-        run: echo "{\"auths\":{\"${{ env.DOCKER_REGISTRY }}\":{\"username\":\"docker\",\"password\":\"${JF_API_KEY}\"}}}" > ~/docker/config.json && docker login --config ~/docker/config.json
+        run: docker login -u docker -p ${{ secrets.JF_API_KEY }} ${DOCKER_REGISTRY}
 
       - name: Docker Build and Push
         run: |
