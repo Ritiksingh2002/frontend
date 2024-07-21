@@ -10,7 +10,7 @@ on:
 
 env:
   DOCKER_REGISTRY: "https://rkss.jfrog.io/artifactory/uii-docker-docker-local/"
-  IMAGE_NAME: https://rkss.jfrog.io/artifactory/uii-docker-docker-local/myimage
+  IMAGE_NAME: myimage
 
 jobs:
   build:
