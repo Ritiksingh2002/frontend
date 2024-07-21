@@ -9,8 +9,8 @@ on:
       - main
 
 env:
-  DOCKER_REGISTRY: "https:///artifactory/api/docker/ui-poc-docker"
-  IMAGE_NAME: "https:///artifactory/api/docker/ui-poc-docker/ui-poc1"
+  DOCKER_REGISTRY: "https://rkss.jfrog.io/artifactory/uii-docker-docker-local/"
+  IMAGE_NAME: https://rkss.jfrog.io/artifactory/uii-docker-docker-local/myimage
 
 jobs:
   build:
@@ -19,7 +19,6 @@ jobs:
     strategy:
       matrix:
         node-version: [20.x]
-          
 
     steps:
       - name: Checkout code
@@ -37,21 +36,17 @@ jobs:
       - name: Build project
         run: npm run build --if-present
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v1
-     
       - name: Generate short SHA
         id: short-sha
-        uses: benjlevesque/short-sha@v1.2
-        with:
-          length: 7
+        run: echo "::set-output name=sha::$(git rev-parse --short HEAD)"
+
       - name: Login to JFrog Docker Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.JFROG_REGISTRY_USERNAME }}
           password: ${{ secrets.JFROG_REGISTRY_PASSWORD }}
           registry: ${{ env.DOCKER_REGISTRY }}
-      
+
       - name: Docker Build and Push
         id: docker_build
         uses: docker/build-push-action@v2
@@ -61,6 +56,3 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
             ${{ env.IMAGE_NAME }}:latest
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
-          cache-to: type=inline
-          load: true
