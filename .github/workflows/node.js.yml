@@ -40,13 +40,10 @@ jobs:
         id: short-sha
         run: echo "::set-output name=sha::$(git rev-parse --short HEAD)"
 
-      - name: Configure Docker CLI
-        run: |
-          echo "{\"auths\":{\"${{ env.DOCKER_REGISTRY }}\":{\"username\":\"docker\",\"password\":\"${JF_API_KEY}\"}}}" > ~/dockerconfig.json
-          docker --config ~/.docker/config.json login "${{ env.DOCKER_REGISTRY }}" --authfile ~/dockerconfig.json
+      - name: Login to JFrog Docker Registry
+        run: echo "{\"auths\":{\"${{ env.DOCKER_REGISTRY }}\":{\"username\":\"docker\",\"password\":\"${JF_API_KEY}\"}}}" > ~/docker/config.json && docker login --config ~/docker/config.json
 
       - name: Docker Build and Push
-        id: docker_build
         run: |
           docker build . -t ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
           docker tag ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }} ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
