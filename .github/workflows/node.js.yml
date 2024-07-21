@@ -41,7 +41,7 @@ jobs:
         run: echo "::set-output name=sha::$(git rev-parse --short HEAD)"
 
       - name: Login to JFrog Docker Registry
-        run: docker login -u docker -p ${{ secrets.JF_API_KEY }} ${DOCKER_REGISTRY}
+        run: echo ${{ secrets.JF_API_KEY }} | docker login -u docker --password-stdin ${DOCKER_REGISTRY}
 
       - name: Docker Build and Push
         run: |
