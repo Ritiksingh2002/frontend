@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Build Vue.js application
-RUN npm run build
+RUN npm run build:dev
 
 # Stage 2 - Serve the production build using a simple Node.js server
 FROM node:14-alpine
