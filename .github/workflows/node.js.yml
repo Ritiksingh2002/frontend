@@ -8,11 +8,24 @@ on:
     branches:
       - main
 
-env:
-  DOCKER_REGISTRY: "https://rkss.jfrog.io/artifactory/uii-docker-docker-local/"
-  IMAGE_NAME: "myimage"
+#env:
+ # DOCKER_REGISTRY: "https://rkss.jfrog.io/artifactory/uii-docker-docker-local/"
+  #IMAGE_NAME: "myimage"
+
 
 jobs:
+  SECRETS-SCAN:
+    uses: https://github.com/Ritiksingh2002/springboot/.github/workflows/utils-build-secrets-scan.yml@master
+    secrets: inherit
+
+  Image:
+    needs: [SECRETS-SCAN]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
   build:
     runs-on: ubuntu-latest
 
@@ -23,6 +36,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
@@ -40,16 +54,16 @@ jobs:
         id: short-sha
         run: echo "::set-output name=sha::$(git rev-parse --short HEAD)"
 
-      - name: Login to JFrog Docker Registry
-        run: echo ${{ secrets.JF_API_KEY }} | docker login -u docker --password-stdin ${DOCKER_REGISTRY}
+   #   - name: Login to JFrog Docker Registry
+    #    run: echo ${{ secrets.JF_API_KEY }} | docker login -u docker --password-stdin ${DOCKER_REGISTRY}
 
-      - name: Docker Build and Push
-        run: |
-          docker build . -t ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
-          docker tag ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }} ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
-          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
+     # - name: Docker Build and Push
+        #run: |
+       #   docker build . -t ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
+      #    docker tag ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }} ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
+         # docker push ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }}
 
-      - name: Docker Tag and Push Latest
-        run: |
-          docker tag ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }} ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+      #- name: Docker Tag and Push Latest
+       # run: |
+        #  docker tag ${{ env.IMAGE_NAME }}:${{ steps.short-sha.outputs.sha }} ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+         # docker push ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
